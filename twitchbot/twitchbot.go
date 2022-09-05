@@ -3,6 +3,7 @@ package twitchbot
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 type TwitchBot struct {
@@ -11,7 +12,7 @@ type TwitchBot struct {
 }
 
 const (
-	url = "irc.chat.twitch.tv:6697"
+	url = "irc.chat.twitch.tv:6667"
 )
 
 func New(creds *Cred) *TwitchBot {
@@ -22,7 +23,7 @@ func New(creds *Cred) *TwitchBot {
 }
 
 func (b *TwitchBot) Shutdown() {
-	// TODO disconnect from IRC
+	b.SendChat("Scroomblebot leaving...")
 	if b.Conn != nil {
 		b.Conn.Close()
 	}
@@ -41,15 +42,23 @@ func (b *TwitchBot) Connect() error {
 }
 
 func (b *TwitchBot) Authenticate() error {
-	passMsg := fmt.Sprintf("PASS oath:%v", b.Creds.Token)
-	nickMsg := fmt.Sprintf("NICK ScroombleBot")
+	passMsg := fmt.Sprintf("PASS oauth:%v\n", b.Creds.Token)
+	nickMsg := fmt.Sprintf("NICK %v\n", b.Creds.Nickname)
+	joinMsg := fmt.Sprintf("JOIN #%v\n", b.Creds.Channel)
 
 	_, err := b.Conn.Write([]byte(passMsg))
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
+
 	_, err = b.Conn.Write([]byte(nickMsg))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	_, err = b.Conn.Write([]byte(joinMsg))
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -58,10 +67,19 @@ func (b *TwitchBot) Authenticate() error {
 	return nil
 }
 
+func (b *TwitchBot) SendChat(msg string) {
+	if b.Conn == nil {
+		return
+	}
+
+	cmd := fmt.Sprintf("PRIVMSG #%v :%v\n", b.Creds.Channel, msg)
+	b.Conn.Write([]byte(cmd))
+}
+
 func (b *TwitchBot) Run() {
 	defer b.Shutdown()
 
-	err := b.Connect() // TODO check error
+	err := b.Connect()
 	if err != nil {
 		return
 	}
@@ -73,13 +91,31 @@ func (b *TwitchBot) Run() {
 
 	buf := make([]byte, 8192)
 
+	fmt.Println("Beginning main loop...")
+
 	for {
 		n, err := b.Conn.Read(buf)
 		if err != nil {
+			fmt.Println("Error reading from connection")
 			fmt.Println(err)
+			return
 			// TODO reconnect logic
 		}
 
-		fmt.Println(buf[:n])
+		if n == 0 {
+			return
+		}
+
+		fmt.Println(string(buf[:n]))
+		go b.Handle(string(buf[:n]))
+	}
+}
+
+func (b *TwitchBot) Handle(ircMsg string) {
+	msg := strings.TrimSpace(strings.Split(ircMsg, ":")[2])
+	fmt.Printf("Handling (%v)\n", msg)
+
+	if msg == "!bot" {
+		b.SendChat("Hello!")
 	}
 }

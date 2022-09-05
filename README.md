@@ -2,8 +2,8 @@
 A Twitch chat bot
 
 # TODO
-Coding this live on stream soon. Follow at twitch.tv/scroombler
 
-## Test commit
-
-blah blah blah
+- [x] Go tools and environment
+- [x] Register Twitch app
+- [x] Authenticate
+- [x] Send/Recv stream messages

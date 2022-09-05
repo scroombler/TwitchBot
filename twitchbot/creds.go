@@ -10,6 +10,8 @@ type Cred struct {
 	ClientId     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 	Token        string `json:"token"`
+	Channel      string `json:"channel"`
+	Nickname     string `json:"nickname"`
 }
 
 func LoadCreds(path string) (*Cred, error) {
