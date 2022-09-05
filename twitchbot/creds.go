@@ -1,4 +1,4 @@
-package main
+package twitchbot
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 type Cred struct {
 	ClientId     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
-	AppToken     string `json:"appToken"`
+	Token        string `json:"token"`
 }
 
 func LoadCreds(path string) (*Cred, error) {
