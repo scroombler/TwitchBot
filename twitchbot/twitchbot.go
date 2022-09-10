@@ -12,7 +12,8 @@ type TwitchBot struct {
 }
 
 const (
-	url = "irc.chat.twitch.tv:6667"
+	url    = "irc.chat.twitch.tv:6667"
+	sslUrl = "irc.chat.twitch.tv:6697"
 )
 
 func New(creds *Cred) *TwitchBot {
@@ -89,7 +90,7 @@ func (b *TwitchBot) Run() {
 		return
 	}
 
-	buf := make([]byte, 8192)
+	buf := make([]byte, 512)
 
 	fmt.Println("Beginning main loop...")
 
@@ -106,16 +107,19 @@ func (b *TwitchBot) Run() {
 			return
 		}
 
-		fmt.Println(string(buf[:n]))
 		go b.Handle(string(buf[:n]))
 	}
 }
 
 func (b *TwitchBot) Handle(ircMsg string) {
-	msg := strings.TrimSpace(strings.Split(ircMsg, ":")[2])
-	fmt.Printf("Handling (%v)\n", msg)
+	fmt.Printf("Handling (%v)\n", ircMsg)
 
-	if msg == "!bot" {
-		b.SendChat("Hello!")
+	switch {
+	case strings.HasPrefix(ircMsg, "PING"):
+		b.Pong()
 	}
+}
+
+func (b *TwitchBot) Pong() {
+	b.Conn.Write([]byte("PONG\r\n"))
 }
