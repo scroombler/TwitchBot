@@ -9,3 +9,6 @@ A Twitch chat bot
 - [x] Send/Recv stream messages
 - [ ] Ping/Pong keepalive
 - [ ] Parse (usernames, etc)
+- [ ] Enable SSL
+- [ ] Token automation and refresh
+- [ ] Catch ctrl-c and gracefully exit
